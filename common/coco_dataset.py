@@ -66,7 +66,7 @@ class COCODataset(Dataset):
             labels[:, 3] *= w / padded_w
             labels[:, 4] *= h / padded_h
         # Fill matrix
-        filled_labels = np.zeros((self.max_objects, 5))
+        filled_labels = np.zeros((self.max_objects, 5), np.float32)
         if labels is not None:
             filled_labels[range(len(labels))[:self.max_objects]] = labels[:self.max_objects]
         filled_labels = torch.from_numpy(filled_labels)

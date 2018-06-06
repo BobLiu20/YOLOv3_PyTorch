@@ -66,9 +66,10 @@ def train(config):
         # config["online_net"] = net
 
     # YOLO loss with 3 scales
+    yolo_losses = []
     for i in range(3):
-        yolo_losses = YOLOLoss(config["yolo"]["anchors"][0],
-                               config["yolo"]["classes"], config["img_h"])
+        yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
+                                    config["yolo"]["classes"], config["img_h"]))
 
     # DataLoader
     dataloader = torch.utils.data.DataLoader(COCODataset(config["train_path"]),
@@ -88,7 +89,7 @@ def train(config):
             losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls"]
             losses = [[]] * len(losses_name)
             for i in range(3):
-                _loss_item = yolo_losses(outputs[i], labels)
+                _loss_item = yolo_losses[i](outputs[i], labels)
                 for j, l in enumerate(_loss_item):
                     losses[j].append(l)
             losses = [sum(l) for l in losses]

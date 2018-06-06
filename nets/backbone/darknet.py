@@ -1,5 +1,6 @@
 import torch.nn as nn
 import math
+from collections import OrderedDict
 
 __all__ = ['darknet21', 'darknet53']
 
@@ -58,15 +59,15 @@ class DarkNet(nn.Module):
     def _make_layer(self, planes, blocks):
         layers = []
         #  downsample
-        layers.append(nn.Conv2d(self.inplanes, planes[1], kernel_size=3,
-                                stride=2, padding=1, bias=False))
-        layers.append(nn.BatchNorm2d(planes[1]))
-        layers.append(nn.LeakyReLU(0.1))
+        layers.append(("ds_conv", nn.Conv2d(self.inplanes, planes[1], kernel_size=3,
+                                stride=2, padding=1, bias=False)))
+        layers.append(("ds_bn", nn.BatchNorm2d(planes[1])))
+        layers.append(("ds_relu", nn.LeakyReLU(0.1)))
         #  blocks
         self.inplanes = planes[1]
         for i in range(0, blocks):
-            layers.append(BasicBlock(self.inplanes, planes))
-        return nn.Sequential(*layers)
+            layers.append(("residual_{}".format(i), BasicBlock(self.inplanes, planes)))
+        return nn.Sequential(OrderedDict(layers))
 
     def forward(self, x):
         x = self.conv1(x)
