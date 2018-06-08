@@ -87,7 +87,7 @@ def train(config):
             # Forward and backward
             optimizer.zero_grad()
             outputs = net(images)
-            losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls"]
+            losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls", "AP"]
             losses = [[]] * len(losses_name)
             for i in range(3):
                 _loss_item = yolo_losses[i](outputs[i], labels)
@@ -115,6 +115,8 @@ def train(config):
                                                         config["global_step"])
                 for i, name in enumerate(losses_name):
                     value = _loss if i == 0 else losses[i]
+                    if i == losses_name.index("AP"):
+                        value /= 3
                     config["tensorboard_writer"].add_scalar(name,
                                                             value,
                                                             config["global_step"])
