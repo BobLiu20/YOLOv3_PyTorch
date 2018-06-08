@@ -22,7 +22,6 @@ sys.path.insert(0, os.path.join(MY_DIRNAME, '..'))
 from nets.model_main import ModelMain
 from nets.yolo_loss import YOLOLoss
 from common.coco_dataset import COCODataset
-# from common import model_utils
 
 
 def train(config):
@@ -45,8 +44,10 @@ def train(config):
     net = net.cuda()
 
     # Restore pretrain model
-    # if os.path.exists(config.get("pretrain_snapshot", "")):
-        # model_utils.restore_model(config["pretrain_snapshot"], net, eval_mode=(is_training==False))
+    if config["pretrain_snapshot"]:
+        logging.info("Load pretrained weights from {}".format(config["pretrain_snapshot"]))
+        state_dict = torch.load(config["pretrain_snapshot"])
+        net.load_state_dict(state_dict)
 
     # Only export onnx
     # if config.get("export_onnx"):

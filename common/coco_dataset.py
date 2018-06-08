@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import logging
 
 import torch
 import torchvision.transforms as transforms
@@ -65,6 +66,8 @@ class COCODataset(Dataset):
             labels[:, 2] = ((y1 + y2) / 2) / padded_h
             labels[:, 3] *= w / padded_w
             labels[:, 4] *= h / padded_h
+        else:
+            logging.info("label does not exist: {}".format(label_path))
         # Fill matrix
         filled_labels = np.zeros((self.max_objects, 5), np.float32)
         if labels is not None:

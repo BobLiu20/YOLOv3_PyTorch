@@ -32,8 +32,11 @@ def evaluate(config):
     net = net.cuda()
 
     # Restore pretrain model
-    state_dict = torch.load(config["pretrain_snapshot"])
-    net.load_state_dict(state_dict)
+    if config["pretrain_snapshot"]:
+        state_dict = torch.load(config["pretrain_snapshot"])
+        net.load_state_dict(state_dict)
+    else:
+        logging.warning("missing pretrain_snapshot!!!")
 
     # YOLO loss with 3 scales
     yolo_losses = []

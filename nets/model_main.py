@@ -13,7 +13,7 @@ class ModelMain(nn.Module):
         self.model_params = config["model_params"]
         #  backbone
         _backbone_fn = backbone_fn[self.model_params["backbone_name"]]
-        self.backbone = _backbone_fn()
+        self.backbone = _backbone_fn(self.model_params["backbone_pretrained"])
         _out_filters = self.backbone.layers_out_filters
         #  embedding0
         self.embedding0 = self._make_embedding([512, 1024], _out_filters[-1])
