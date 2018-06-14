@@ -70,7 +70,7 @@ def train(config):
     yolo_losses = []
     for i in range(3):
         yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
-                                    config["yolo"]["classes"], config["img_h"]))
+                                    config["yolo"]["classes"], (config["img_w"], config["img_h"])))
 
     # DataLoader
     dataloader = torch.utils.data.DataLoader(COCODataset(config["train_path"]),
@@ -80,14 +80,14 @@ def train(config):
     # Start the training loop
     logging.info("Start training.")
     for epoch in range(config["epochs"]):
-        for step, (_, images, labels) in enumerate(dataloader):
+        for step, (images, labels) in enumerate(dataloader):
             start_time = time.time()
             config["global_step"] += 1
 
             # Forward and backward
             optimizer.zero_grad()
             outputs = net(images)
-            losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls", "AP"]
+            losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls"]
             losses = [[]] * len(losses_name)
             for i in range(3):
                 _loss_item = yolo_losses[i](outputs[i], labels)
@@ -115,8 +115,6 @@ def train(config):
                                                         config["global_step"])
                 for i, name in enumerate(losses_name):
                     value = _loss if i == 0 else losses[i]
-                    if i == losses_name.index("AP"):
-                        value /= 3
                     config["tensorboard_writer"].add_scalar(name,
                                                             value,
                                                             config["global_step"])

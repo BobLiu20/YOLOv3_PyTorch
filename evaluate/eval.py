@@ -42,7 +42,7 @@ def evaluate(config):
     yolo_losses = []
     for i in range(3):
         yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
-                                    config["yolo"]["classes"], config["img_h"]))
+                                    config["yolo"]["classes"], (config["img_w"], config["img_h"])))
 
     # DataLoader
     dataloader = torch.utils.data.DataLoader(COCODataset(config["val_path"]),
@@ -53,7 +53,7 @@ def evaluate(config):
     logging.info("Start eval.")
     n_gt = 0
     correct = 0
-    for step, (_, images, labels) in enumerate(dataloader):
+    for step, (images, labels) in enumerate(dataloader):
         labels = labels.cuda()
         with torch.no_grad():
             outputs = net(images)

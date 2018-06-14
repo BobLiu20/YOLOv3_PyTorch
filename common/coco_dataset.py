@@ -74,7 +74,7 @@ class COCODataset(Dataset):
             filled_labels[range(len(labels))[:self.max_objects]] = labels[:self.max_objects]
         filled_labels = torch.from_numpy(filled_labels)
 
-        return img_path, input_img, filled_labels
+        return input_img, filled_labels
 
     def __len__(self):
         return len(self.img_files)

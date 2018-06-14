@@ -7,21 +7,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 
-def load_classes(path):
-    """
-    Loads class labels at 'path'
-    """
-    fp = open(path, "r")
-    names = fp.read().split("\n")[:-1]
-    return names
-
-def weights_init_normal(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm2d') != -1:
-        torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
-        torch.nn.init.constant_(m.bias.data, 0.0)
 
 def bbox_iou(box1, box2, x1y1x2y2=True):
     """
@@ -111,67 +96,3 @@ def non_max_suppression(prediction, num_classes, conf_thres=0.5, nms_thres=0.4):
             output[image_i] = max_detections if output[image_i] is None else torch.cat((output[image_i], max_detections))
 
     return output
-
-def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, dim, ignore_thres, img_dim):
-    nB = target.size(0)
-    nA = num_anchors
-    nC = num_classes
-    dim = dim
-    mask        = torch.zeros(nB, nA, dim, dim)
-    tx         = torch.zeros(nB, nA, dim, dim)
-    ty         = torch.zeros(nB, nA, dim, dim)
-    tw         = torch.zeros(nB, nA, dim, dim)
-    th         = torch.zeros(nB, nA, dim, dim)
-    tconf      = torch.zeros(nB, nA, dim, dim)
-    tcls       = torch.zeros(nB, nA, dim, dim, num_classes)
-
-    nGT = 0
-    nCorrect = 0
-    for b in range(nB):
-        for t in range(target.shape[1]):
-            if target[b, t].sum() == 0:
-                continue
-            nGT = nGT + 1
-            # Convert to position relative to box
-            gx = target[b, t, 1] * dim
-            gy = target[b, t, 2] * dim
-            gw = target[b, t, 3] * dim
-            gh = target[b, t, 4] * dim
-            # Get grid box indices
-            gi = int(gx)
-            gj = int(gy)
-            # Get shape of gt box
-            gt_box = torch.FloatTensor(np.array([0, 0, gw, gh])).unsqueeze(0)
-            # Get shape of anchor box
-            anchor_shapes = torch.FloatTensor(np.concatenate((np.zeros((len(anchors), 2)), np.array(anchors)), 1))
-            # Calculate iou between gt and anchor shape
-            anch_ious = bbox_iou(gt_box, anchor_shapes)
-            # Find the best matching anchor box
-            best_n = np.argmax(anch_ious)
-            best_iou = anch_ious[best_n]
-            # Get the ground truth box and corresponding best prediction
-            gt_box = torch.FloatTensor(np.array([gx, gy, gw, gh])).unsqueeze(0)
-            pred_box = pred_boxes[b, best_n, gj, gi].unsqueeze(0)
-
-            # Masks
-            mask[b, best_n, gj, gi] = 1
-            # Coordinates
-            tx[b, best_n, gj, gi] = gx - gi
-            ty[b, best_n, gj, gi] = gy - gj
-            # Width and height
-            tw[b, best_n, gj, gi] = math.log(gw/anchors[best_n][0] + 1e-16)
-            th[b, best_n, gj, gi] = math.log(gh/anchors[best_n][1] + 1e-16)
-            # One-hot encoding of label
-            tcls[b, best_n, gj, gi, int(target[b, t, 0])] = 1
-            # Calculate iou between ground truth and best matching prediction
-            iou = bbox_iou(gt_box, pred_box, x1y1x2y2=False)
-            tconf[b, best_n, gj, gi] = 1
-
-            if iou > 0.5:
-                nCorrect = nCorrect + 1
-
-    return nGT, nCorrect, mask, tx, ty, tw, th, tconf, tcls
-
-def to_categorical(y, num_classes):
-    """ 1-hot encodes a tensor """
-    return torch.from_numpy(np.eye(num_classes, dtype='uint8')[y])
