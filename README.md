@@ -64,6 +64,8 @@ python eval.py params.py
 | YOLOv3 (convert from paper)| 58.18             |official_yolov3_weights_pytorch.pth|
 | YOLOv3 (train best model)  | 59.66             |yolov3_weights_pytorch.pth 		 |
 
+<p align="center"><img src="https://pjreddie.com/media/image/Screen_Shot_2018-03-24_at_10.48.42_PM.png" width="480"\></p>
+
 ## Credit
 ```
 @article{yolov3,
