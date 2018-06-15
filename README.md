@@ -41,11 +41,12 @@ cd training
 python training.py params.py
 ```
 ##### Option: Visualizing training
-You can using tensorbard to visualizing your training.   
-But please install tensorboard in first.
 ```
+#  please install tensorboard in first
 python -m tensorboard.main --logdir=YOUR_WORKING_DIR   
 ```
+<p><img src="common/loss_curve.png"\></p>
+
 
 ## Evaluate
 ##### Download pretrained weights
