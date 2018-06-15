@@ -1,26 +1,26 @@
 # YOLOv3
-Implementation of YOLOv3 in PyTorch.
+Full implementation of YOLOv3 in PyTorch.
 
 ## Overview
-### YOLOv3: An Incremental Improvement
+#### YOLOv3: An Incremental Improvement
 [[Paper]](https://pjreddie.com/media/files/papers/YOLOv3.pdf)   
 [[Original Implementation]](https://github.com/pjreddie/darknet)   
 
-### Why this project
-Implement YOLOv3 and darknet53 without darknet format parser.   
+#### Why this project
+Implement YOLOv3 and darknet53 without original darknet cfg parser.   
 It is easy to custom your backbone network. Such as resnet, densenet...   
 
 ## Installation
-#### Environment
+##### Environment
 * pytorch >= 0.4.0
 * python >= 3.6.0
-#### Get code
+##### Get code
 ```
-git clone this repo
+git clone https://github.com/BobLiu20/YOLOv3_PyTorch.git
 cd YOLOv3_PyTorch
 pip3 install -r requirements.txt --user
 ```
-#### Download COCO dataset
+##### Download COCO dataset
 ```
 cd data/
 bash get_coco_dataset.sh
