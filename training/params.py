@@ -13,9 +13,9 @@ TRAINING_PARAMS = \
     "lr": {
         "backbone_lr": 0.001,
         "other_lr": 0.01,
-        "freeze_backbone": False,
+        "freeze_backbone": False,   #  freeze backbone wegiths to finetune
         "decay_gamma": 0.1,
-        "decay_step": 30,
+        "decay_step": 30,           #  decay lr in every ? epochs
     },
     "optimizer": {
         "type": "sgd",
@@ -26,7 +26,7 @@ TRAINING_PARAMS = \
     "epochs": 100,
     "img_h": 416,
     "img_w": 416,
-    "parallels": [0,3,5,6],                         #  config GPU device
+    "parallels": [0,1,2,3],                         #  config GPU device
     "working_dir": "YOUR_WORKING_DIR",              #  replace with your working dir
     "pretrain_snapshot": "",                        #  load checkpoint
     "evaluate_type": "", 
