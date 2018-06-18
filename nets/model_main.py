@@ -16,15 +16,15 @@ class ModelMain(nn.Module):
         self.backbone = _backbone_fn(self.model_params["backbone_pretrained"])
         _out_filters = self.backbone.layers_out_filters
         #  embedding0
-        final_out_filter0 = len(config["yolo"]["anchors"][0]) * config["yolo"]["classes"]
+        final_out_filter0 = len(config["yolo"]["anchors"][0]) * (5 + config["yolo"]["classes"])
         self.embedding0 = self._make_embedding([512, 1024], _out_filters[-1], final_out_filter0)
         #  embedding1
-        final_out_filter1 = len(config["yolo"]["anchors"][1]) * config["yolo"]["classes"]
+        final_out_filter1 = len(config["yolo"]["anchors"][1]) * (5 + config["yolo"]["classes"])
         self.embedding1_cbl = self._make_cbl(512, 256, 1)
         self.embedding1_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.embedding1 = self._make_embedding([256, 512], _out_filters[-2] + 256, final_out_filter1)
         #  embedding2
-        final_out_filter2 = len(config["yolo"]["anchors"][2]) * config["yolo"]["classes"]
+        final_out_filter2 = len(config["yolo"]["anchors"][2]) * (5 + config["yolo"]["classes"])
         self.embedding2_cbl = self._make_cbl(256, 128, 1)
         self.embedding2_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.embedding2 = self._make_embedding([128, 256], _out_filters[-3] + 128, final_out_filter2)
