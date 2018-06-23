@@ -21,9 +21,9 @@ class COCODataset(Dataset):
 
         #  transforms and augmentation
         self.transforms = data_transforms.Compose()
-        self.transforms.add(data_transforms.ImageBaseAug())
         if is_training:
-            self.transforms.add(data_transforms.KeepAspect())
+            self.transforms.add(data_transforms.ImageBaseAug())
+        self.transforms.add(data_transforms.KeepAspect())
         self.transforms.add(data_transforms.ResizeImage(self.img_size))
         self.transforms.add(data_transforms.ToTensor(self.max_objects, self.is_debug))
 
