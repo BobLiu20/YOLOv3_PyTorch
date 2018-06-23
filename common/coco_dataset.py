@@ -1,80 +1,74 @@
 import os
 import numpy as np
 import logging
+import cv2
 
 import torch
-import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
-from PIL import Image
-from skimage.transform import resize
+from . import data_transforms
+
 
 class COCODataset(Dataset):
-    def __init__(self, list_path, img_size=416):
+    def __init__(self, list_path, img_size, is_training, is_debug=False):
         with open(list_path, 'r') as file:
             self.img_files = file.readlines()
         self.label_files = [path.replace('images', 'labels').replace('.png', '.txt'
-                            ).replace('.jpg', '.txt') for path in self.img_files]
-        self.img_shape = (img_size, img_size)
+            ).replace('.jpg', '.txt') for path in self.img_files]
+        self.img_size = img_size  # (w, h)
         self.max_objects = 50
+        self.is_debug = is_debug
+
+        #  transforms and augmentation
+        self.transforms = data_transforms.Compose()
+        self.transforms.add(data_transforms.ImageBaseAug())
+        if is_training:
+            self.transforms.add(data_transforms.KeepAspect())
+        self.transforms.add(data_transforms.ResizeImage(self.img_size))
+        self.transforms.add(data_transforms.ToTensor(self.max_objects, self.is_debug))
 
     def __getitem__(self, index):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
-        img = np.array(Image.open(img_path))
-
-        # Black and white images
-        if len(img.shape) == 2:
-            img = np.repeat(img[:, :, np.newaxis], 3, axis=2)
-
-        h, w, _ = img.shape
-        dim_diff = np.abs(h - w)
-        # Upper (left) and lower (right) padding
-        pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
-        # Determine padding
-        pad = ((pad1, pad2), (0, 0), (0, 0)) if h <= w else ((0, 0), (pad1, pad2), (0, 0))
-        # Add padding
-        input_img = np.pad(img, pad, 'constant', constant_values=128) / 255.
-        padded_h, padded_w, _ = input_img.shape
-        # Resize and normalize
-        input_img = resize(input_img, (*self.img_shape, 3), mode='reflect')
-        # Channels-first
-        input_img = np.transpose(input_img, (2, 0, 1))
-        # As pytorch tensor
-        input_img = torch.from_numpy(input_img).float()
-
-        #---------
-        #  Label
-        #---------
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        if img is None:
+            raise Exception("Read image error: {}".format(img_path))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         label_path = self.label_files[index % len(self.img_files)].rstrip()
-
-        labels = None
         if os.path.exists(label_path):
             labels = np.loadtxt(label_path).reshape(-1, 5)
-            # Extract coordinates for unpadded + unscaled image
-            x1 = w * (labels[:, 1] - labels[:, 3]/2)
-            y1 = h * (labels[:, 2] - labels[:, 4]/2)
-            x2 = w * (labels[:, 1] + labels[:, 3]/2)
-            y2 = h * (labels[:, 2] + labels[:, 4]/2)
-            # Adjust for added padding
-            x1 += pad[1][0]
-            y1 += pad[0][0]
-            x2 += pad[1][0]
-            y2 += pad[0][0]
-            # Calculate ratios from coordinates
-            labels[:, 1] = ((x1 + x2) / 2) / padded_w
-            labels[:, 2] = ((y1 + y2) / 2) / padded_h
-            labels[:, 3] *= w / padded_w
-            labels[:, 4] *= h / padded_h
         else:
             logging.info("label does not exist: {}".format(label_path))
-        # Fill matrix
-        filled_labels = np.zeros((self.max_objects, 5), np.float32)
-        if labels is not None:
-            filled_labels[range(len(labels))[:self.max_objects]] = labels[:self.max_objects]
-        filled_labels = torch.from_numpy(filled_labels)
+            labels = np.zeros((1, 5), np.float32)
 
-        return input_img, filled_labels
+        sample = {'image': img, 'label': labels}
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+        return sample
 
     def __len__(self):
         return len(self.img_files)
+
+
+#  use for test dataloader
+if __name__ == "__main__":
+    dataloader = torch.utils.data.DataLoader(COCODataset("../data/coco/trainvalno5k.txt",
+                                                         (416, 416), True, is_debug=True),
+                                             batch_size=2,
+                                             shuffle=False, num_workers=1, pin_memory=False)
+    for step, sample in enumerate(dataloader):
+        for i, (image, label) in enumerate(zip(sample['image'], sample['label'])):
+            image = image.numpy()
+            h, w = image.shape[:2]
+            for l in label:
+                if l.sum() == 0:
+                    continue
+                x1 = int((l[1] - l[3] / 2) * w)
+                y1 = int((l[2] - l[4] / 2) * h)
+                x2 = int((l[1] + l[3] / 2) * w)
+                y2 = int((l[2] + l[4] / 2) * h)
+                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255))
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            cv2.imwrite("step{}_{}.jpg".format(step, i), image)
+        # only one batch
+        break
