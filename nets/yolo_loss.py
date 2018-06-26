@@ -15,8 +15,11 @@ class YOLOLoss(nn.Module):
         self.bbox_attrs = 5 + num_classes
         self.img_size = img_size
 
-        self.lambda_coord = 5
-        self.lambda_noobj = 0.5
+        self.ignore_threshold = 0.5
+        self.lambda_xy = 2.5
+        self.lambda_wh = 2.5
+        self.lambda_conf = 1.0
+        self.lambda_cls = 1.0
 
         self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCELoss()
@@ -41,17 +44,25 @@ class YOLOLoss(nn.Module):
         pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred.
 
         if targets is not None:
-            mask, tx, ty, tw, th, tconf, tcls = self.get_target(targets, scaled_anchors, in_w, in_h)
-            mask, tx, ty, tw, th = mask.cuda(), tx.cuda(), ty.cuda(), tw.cuda(), th.cuda()
+            #  build target
+            mask, noobj_mask, tx, ty, tw, th, tconf, tcls = self.get_target(targets, scaled_anchors,
+                                                                           in_w, in_h,
+                                                                           self.ignore_threshold)
+            mask, noobj_mask = mask.cuda(), noobj_mask.cuda()
+            tx, ty, tw, th = tx.cuda(), ty.cuda(), tw.cuda(), th.cuda()
             tconf, tcls = tconf.cuda(), tcls.cuda()
-            loss_x = self.lambda_coord * self.bce_loss(x * mask, tx * mask) / 2
-            loss_y = self.lambda_coord * self.bce_loss(y * mask, ty * mask) / 2
-            loss_w = self.lambda_coord * self.mse_loss(w * mask, tw * mask) / 2
-            loss_h = self.lambda_coord * self.mse_loss(h * mask, th * mask) / 2
+            #  losses.
+            loss_x = self.bce_loss(x * mask, tx * mask)
+            loss_y = self.bce_loss(y * mask, ty * mask)
+            loss_w = self.mse_loss(w * mask, tw * mask)
+            loss_h = self.mse_loss(h * mask, th * mask)
             loss_conf = self.bce_loss(conf * mask, mask) + \
-                self.lambda_noobj * self.bce_loss(conf * (1 - mask), mask * (1 - mask))
+                0.5 * self.bce_loss(conf * noobj_mask, noobj_mask * 0.0)
             loss_cls = self.bce_loss(pred_cls[mask == 1], tcls[mask == 1])
-            loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
+            #  total loss = losses * weight
+            loss = loss_x * self.lambda_xy + loss_y * self.lambda_xy + \
+                loss_w * self.lambda_wh + loss_h * self.lambda_wh + \
+                loss_conf * self.lambda_conf + loss_cls * self.lambda_cls
 
             return loss, loss_x.item(), loss_y.item(), loss_w.item(),\
                 loss_h.item(), loss_conf.item(), loss_cls.item()
@@ -80,10 +91,11 @@ class YOLOLoss(nn.Module):
                                 conf.view(bs, -1, 1), pred_cls.view(bs, -1, self.num_classes)), -1)
             return output.data
 
-    def get_target(self, target, anchors, in_w, in_h):
+    def get_target(self, target, anchors, in_w, in_h, ignore_threshold):
         bs = target.size(0)
 
         mask = torch.zeros(bs, self.num_anchors, in_h, in_w, requires_grad=False)
+        noobj_mask = torch.ones(bs, self.num_anchors, in_h, in_w, requires_grad=False)
         tx = torch.zeros(bs, self.num_anchors, in_h, in_w, requires_grad=False)
         ty = torch.zeros(bs, self.num_anchors, in_h, in_w, requires_grad=False)
         tw = torch.zeros(bs, self.num_anchors, in_h, in_w, requires_grad=False)
@@ -107,8 +119,10 @@ class YOLOLoss(nn.Module):
                 # Get shape of anchor box
                 anchor_shapes = torch.FloatTensor(np.concatenate((np.zeros((self.num_anchors, 2)),
                                                                   np.array(anchors)), 1))
-                # Calculate iou between gt and anchor shape
+                # Calculate iou between gt and anchor shapes
                 anch_ious = bbox_iou(gt_box, anchor_shapes)
+                # Where the overlap is larger than threshold set mask to zero (ignore)
+                noobj_mask[b, anch_ious > ignore_threshold] = 0
                 # Find the best matching anchor box
                 best_n = np.argmax(anch_ious)
 
@@ -125,4 +139,4 @@ class YOLOLoss(nn.Module):
                 # One-hot encoding of label
                 tcls[b, best_n, gj, gi, int(target[b, t, 0])] = 1
 
-        return mask, tx, ty, tw, th, tconf, tcls
+        return mask, noobj_mask, tx, ty, tw, th, tconf, tcls

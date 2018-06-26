@@ -7,8 +7,9 @@ Full implementation of YOLOv3 in PyTorch.
 [[Original Implementation]](https://github.com/pjreddie/darknet)   
 
 #### Why this project
-Implement YOLOv3 and darknet53 without original darknet cfg parser.   
-It is easy to custom your backbone network. Such as resnet, densenet...   
+* Implement YOLOv3 and darknet53 without original darknet cfg parser.   
+* It is easy to custom your backbone network. Such as resnet, densenet...   
+* It is easy to reproduce result of paper using default parameters(~10 epochs).   
 
 ## Installation
 ##### Environment
@@ -34,7 +35,8 @@ bash get_coco_dataset.sh
 ##### Modify training parameters
 1. Review config file ```training/params.py```   
 2. Replace ```YOUR_WORKING_DIR``` to your working directory. Use for save model and tmp file.
-3. Adjust your lr, parallels and so on.
+3. Adjust your GPU device. see parallels.   
+4. Adjust other parameters. (keep default to reproduce the results of paper after 10 epochs)   
 ##### Start training
 ```
 cd training
