@@ -91,9 +91,10 @@ python test_fps.py params.py
 ```
 ##### Results
 * Test in TitanX GPU with different input size and batch size.   
-* Keep in mind this is a full test in YOLOv3. Not only backbone but also yolo layer and NMS.
-| Imp.  | Backbone | Input Size | Batch Size | Inference Time | FPS |
-| -----:|:--------:|:----------:|:----------:|:--------------:|:---:|
+* Keep in mind this is a full test in YOLOv3. Not only backbone but also yolo layer and NMS.   
+
+| Imp.	| Backbone | Input Size | Batch Size | Inference Time | FPS |
+| ----- |:--------:|:----------:|:----------:|:--------------:|:---:|
 | Paper | Darknet53| 320        | 1          | 22ms           | 45  |
 | Paper | Darknet53| 416        | 1          | 29ms           | 34  |
 | Paper | Darknet53| 608        | 1          | 51ms           | 19  |
