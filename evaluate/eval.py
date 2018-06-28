@@ -94,7 +94,7 @@ def main():
                         format="[%(asctime)s %(filename)s] %(message)s")
 
     if len(sys.argv) != 2:
-        logging.error("Usage: python training.py params.py")
+        logging.error("Usage: python eval.py params.py")
         sys.exit()
     params_path = sys.argv[1]
     if not os.path.isfile(params_path):
