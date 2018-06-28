@@ -47,7 +47,7 @@ python training.py params.py
 #  please install tensorboard in first
 python -m tensorboard.main --logdir=YOUR_WORKING_DIR   
 ```
-<p><img src="common/loss_curve.png"\></p>
+<p><img src="common/demo/loss_curve.png"\></p>
 
 
 ## Evaluate
@@ -61,13 +61,44 @@ cd evaluate
 python eval.py params.py
 ```
 ##### Results
-| Model                      | mAP (min. 50 IoU) | weights file						 |
-| -------------------------- |:-----------------:|:---------------------------------:|
-| YOLOv3 (paper)             | 57.9              |							         |
-| YOLOv3 (convert from paper)| 58.18             |official_yolov3_weights_pytorch.pth|
-| YOLOv3 (train best model)  | 59.66             |yolov3_weights_pytorch.pth 		 |
+| Model                       | mAP (min. 50 IoU) | weights file					  |
+| --------------------------- |:-----------------:|:---------------------------------:|
+| YOLOv3 (paper)              | 57.9              |							          |
+| YOLOv3 (convert from paper) | 58.18             |official_yolov3_weights_pytorch.pth|
+| YOLOv3 (our train 20 epochs)| 59.66             |yolov3_weights_pytorch.pth 		  |
+| YOLOv3 (our train 60 epochs)| 61.89             |                         		  |
 
-<p align="center"><img src="https://pjreddie.com/media/image/Screen_Shot_2018-03-24_at_10.48.42_PM.png" width="480"\></p>
+
+## Quick test
+##### pretrained weights
+Please download pretrained weights ```yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
+##### Start test
+```
+cd test
+python test_images.py params.py
+```
+You can got result images in output folder.   
+<p align="center"><img src="common/demo/demo0.jpg"\></p>
+<p align="center"><img src="common/demo/demo1.jpg"\></p>
+
+## Measure FPS
+##### pretrained weights
+Please download pretrained weights ```yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
+##### Start test
+```
+cd test
+python test_fps.py params.py
+```
+##### Results
+* Test in TitanX GPU with different input size and batch size.   
+* Keep in mind this is a full test in YOLOv3. Not only backbone but also yolo layer and NMS.
+| Imp.  | Backbone | Input Size | Batch Size | Inference Time | FPS |
+| -----:|:--------:|:----------:|:----------:|:--------------:|:---:|
+| Paper | Darknet53| 320        | 1          | 22ms           | 45  |
+| Paper | Darknet53| 416        | 1          | 29ms           | 34  |
+| Paper | Darknet53| 608        | 1          | 51ms           | 19  |
+| Our   | Darknet53| 416        | 1          | 28ms           | 36  |
+| Our   | Darknet53| 416        | 8          | 17ms           | 58  |
 
 ## Credit
 ```

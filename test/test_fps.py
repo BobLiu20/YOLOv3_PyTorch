@@ -85,6 +85,7 @@ def test(config):
                 output = torch.cat(output_list, 1)
                 batch_detections = non_max_suppression(output, config["yolo"]["classes"],
                                                        conf_thres=config["confidence_threshold"])
+                torch.cuda.synchronize() #  wait all done.
             end_time = time.time()
             inference_times.append(end_time - start_time)
         inference_time = sum(inference_times) / len(inference_times) / batch_size

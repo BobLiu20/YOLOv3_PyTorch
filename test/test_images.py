@@ -73,8 +73,8 @@ def test(config):
             if image is None:
                 logging.error("read path error: {}. skip it.".format(path))
                 continue
-            images_origin.append(image)  # keep for save result
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            images_origin.append(image)  # keep for save result
             image = cv2.resize(image, (config["img_w"], config["img_h"]),
                                interpolation=cv2.INTER_LINEAR)
             image = image.astype(np.float32)
