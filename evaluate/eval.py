@@ -64,7 +64,7 @@ def evaluate(config):
             for i in range(3):
                 output_list.append(yolo_losses[i](outputs[i]))
             output = torch.cat(output_list, 1)
-            output = non_max_suppression(output, 80, conf_thres=0.2)
+            output = non_max_suppression(output, config["yolo"]["classes"], conf_thres=0.2)
             #  calculate
             for sample_i in range(labels.size(0)):
                 # Get labels for sample where width is not zero (dummies)

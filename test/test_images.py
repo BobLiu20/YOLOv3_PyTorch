@@ -92,7 +92,8 @@ def test(config):
                 output_list.append(yolo_losses[i](outputs[i]))
             output = torch.cat(output_list, 1)
             batch_detections = non_max_suppression(output, config["yolo"]["classes"],
-                                                   conf_thres=config["confidence_threshold"])
+                                                   conf_thres=config["confidence_threshold"],
+                                                   nms_thres=0.45)
 
         # write result images. Draw bounding boxes and labels of detections
         classes = open(config["classes_names_path"], "r").read().split("\n")[:-1]

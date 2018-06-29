@@ -5,3 +5,6 @@ pillow
 tensorboardX
 imgaug>=0.2.5
 opencv-python
+matplotlib
+cython
+pycocotools

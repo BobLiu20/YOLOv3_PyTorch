@@ -32,6 +32,7 @@ class COCODataset(Dataset):
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         if img is None:
             raise Exception("Read image error: {}".format(img_path))
+        ori_h, ori_w = img.shape[:2]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         label_path = self.label_files[index % len(self.img_files)].rstrip()
@@ -44,6 +45,8 @@ class COCODataset(Dataset):
         sample = {'image': img, 'label': labels}
         if self.transforms is not None:
             sample = self.transforms(sample)
+        sample["image_path"] = img_path
+        sample["origin_size"] = str([ori_w, ori_h])
         return sample
 
     def __len__(self):
