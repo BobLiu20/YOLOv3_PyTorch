@@ -91,7 +91,9 @@ def train(config):
             optimizer.zero_grad()
             outputs = net(images)
             losses_name = ["total_loss", "x", "y", "w", "h", "conf", "cls"]
-            losses = [[]] * len(losses_name)
+            losses = []
+            for _ in range(len(losses_name)):
+                losses.append([])
             for i in range(3):
                 _loss_item = yolo_losses[i](outputs[i], labels)
                 for j, l in enumerate(_loss_item):
