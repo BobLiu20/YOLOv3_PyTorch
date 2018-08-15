@@ -76,7 +76,7 @@ def evaluate(config):
                 output_list.append(yolo_losses[i](outputs[i]))
             output = torch.cat(output_list, 1)
             batch_detections = non_max_suppression(output, config["yolo"]["classes"],
-                                                   conf_thres=0.001,
+                                                   conf_thres=0.01,
                                                    nms_thres=0.45)
         for idx, detections in enumerate(batch_detections):
             image_id = int(os.path.basename(image_paths[idx])[-16:-4])

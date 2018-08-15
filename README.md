@@ -9,7 +9,6 @@ Full implementation of YOLOv3 in PyTorch.
 #### Why this project
 * Implement YOLOv3 and darknet53 without original darknet cfg parser.   
 * It is easy to custom your backbone network. Such as resnet, densenet...   
-* It is easy to reproduce result of paper using default parameters(~10 epochs).   
 
 ## Installation
 ##### Environment
@@ -36,7 +35,7 @@ bash get_coco_dataset.sh
 1. Review config file ```training/params.py```   
 2. Replace ```YOUR_WORKING_DIR``` to your working directory. Use for save model and tmp file.
 3. Adjust your GPU device. see parallels.   
-4. Adjust other parameters. (keep default to reproduce the results of paper after 10 epochs)   
+4. Adjust other parameters.   
 ##### Start training
 ```
 cd training
@@ -53,25 +52,17 @@ python -m tensorboard.main --logdir=YOUR_WORKING_DIR
 ## Evaluate
 ##### Download pretrained weights
 1. See [weights readme](weights/README.md) for detail.   
-2. Download pretrained yolo3 full wegiths from [Google Drive](https://drive.google.com/open?id=1Bm_CLv9hP3mMQ5cyerKRjvt7_t1duvjI) or [Baidu Drive](https://pan.baidu.com/s/1gx-XRUE1NTfIMKkQ1L0awQ)   
-3. Move downloaded file ```yolov3_weights_pytorch.pth``` to ```wegihts``` folder in this project.   
+2. Download pretrained yolo3 full wegiths from [Google Drive](https://drive.google.com/file/d/1SnFAlSvsx37J7MDNs3WWLgeKY0iknikP/view?usp=sharing) or [Baidu Drive](https://pan.baidu.com/s/1YCcRLPWPNhsQfn5f8bs_0g)   
+3. Move downloaded file ```official_yolov3_weights_pytorch.pth``` to ```wegihts``` folder in this project.   
 ##### Start evaluate
 ```
 cd evaluate
-python eval.py params.py
+python eval_coco.py params.py
 ```
-##### Results
-| Model                       | mAP (min. 50 IoU) | weights file					  |
-| --------------------------- |:-----------------:|:---------------------------------:|
-| YOLOv3 (paper)              | 57.9              |							          |
-| YOLOv3 (convert from paper) | 58.18             |official_yolov3_weights_pytorch.pth|
-| YOLOv3 (our train 20 epochs)| 59.66             |yolov3_weights_pytorch.pth 		  |
-| YOLOv3 (our train 60 epochs)| 61.89             |                         		  |
-
 
 ## Quick test
 ##### pretrained weights
-Please download pretrained weights ```yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
+Please download pretrained weights ```official_yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
 ##### Start test
 ```
 cd test
@@ -83,7 +74,7 @@ You can got result images in output folder.
 
 ## Measure FPS
 ##### pretrained weights
-Please download pretrained weights ```yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
+Please download pretrained weights ```official_yolov3_weights_pytorch.pth``` or use yourself checkpoint.   
 ##### Start test
 ```
 cd test
@@ -113,4 +104,4 @@ python test_fps.py params.py
 
 ## Reference
 * [darknet](https://github.com/pjreddie/darknet)
-* [PyTorch-YOLOv3](https://github.com/eriklindernoren/PyTorch-YOLOv3): Thanks for Evaluate and YOLO loss code
+* [PyTorch-YOLOv3](https://github.com/eriklindernoren/PyTorch-YOLOv3): Thanks for YOLO loss code

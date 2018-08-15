@@ -17,5 +17,5 @@ TRAINING_PARAMS = \
     "img_h": 416,
     "img_w": 416,
     "parallels": [0],
-    "pretrain_snapshot": "../weights/yolov3_weights_pytorch.pth",
+    "pretrain_snapshot": "../weights/official_yolov3_weights_pytorch.pth",
 }

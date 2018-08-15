@@ -122,7 +122,7 @@ class YOLOLoss(nn.Module):
                 # Calculate iou between gt and anchor shapes
                 anch_ious = bbox_iou(gt_box, anchor_shapes)
                 # Where the overlap is larger than threshold set mask to zero (ignore)
-                noobj_mask[b, anch_ious > ignore_threshold] = 0
+                noobj_mask[b, anch_ious > ignore_threshold, gj, gi] = 0
                 # Find the best matching anchor box
                 best_n = np.argmax(anch_ious)
 
