@@ -67,7 +67,7 @@ def test(config):
         # preprocess
         images = []
         images_origin = []
-        for path in images_path[step*batch_size: (step+1)*batch_size]:
+        for path in images_path[step : step + batch_size]:
             logging.info("processing: {}".format(path))
             image = cv2.imread(path, cv2.IMREAD_COLOR)
             if image is None:
