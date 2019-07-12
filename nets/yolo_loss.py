@@ -24,10 +24,13 @@ class YOLOLoss(nn.Module):
         self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCELoss()
 
-    def forward(self, input, targets=None):
-        bs = input.size(0)
-        in_h = input.size(2)
-        in_w = input.size(3)
+    def forward(self, input, bs_in,in_h_in,in_w_in,targets=None):
+        # bs = input.size(0)
+        # in_h = input.size(2)
+        # in_w = input.size(3)
+        bs = bs_in
+        in_h = in_h_in
+        in_w = in_w_in
         stride_h = self.img_size[1] / in_h
         stride_w = self.img_size[0] / in_w
         scaled_anchors = [(a_w / stride_w, a_h / stride_h) for a_w, a_h in self.anchors]
@@ -80,16 +83,17 @@ class YOLOLoss(nn.Module):
             anchor_w = anchor_w.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(w.shape)
             anchor_h = anchor_h.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(h.shape)
             # Add offset and scale with anchors
-            pred_boxes = FloatTensor(prediction[..., :4].shape)
-            pred_boxes[..., 0] = x.data + grid_x
-            pred_boxes[..., 1] = y.data + grid_y
-            pred_boxes[..., 2] = torch.exp(w.data) * anchor_w
-            pred_boxes[..., 3] = torch.exp(h.data) * anchor_h
+            pred_boxes = FloatTensor(torch.Size([bs,  self.num_anchors, in_h, in_w,4]))
+            pred_boxes[..., 0] = x + grid_x
+            pred_boxes[..., 1] = y + grid_y
+            pred_boxes[..., 2] = torch.exp(w) * anchor_w
+            pred_boxes[..., 3] = torch.exp(h) * anchor_h
             # Results
-            _scale = torch.Tensor([stride_w, stride_h] * 2).type(FloatTensor)
+            # _scale = torch.Tensor([stride_w, stride_h] * 2).type(FloatTensor)
+            _scale = FloatTensor([stride_w,stride_h]*2)
             output = torch.cat((pred_boxes.view(bs, -1, 4) * _scale,
                                 conf.view(bs, -1, 1), pred_cls.view(bs, -1, self.num_classes)), -1)
-            return output.data
+            return output
 
     def get_target(self, target, anchors, in_w, in_h, ignore_threshold):
         bs = target.size(0)

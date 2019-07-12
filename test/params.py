@@ -10,7 +10,7 @@ TRAINING_PARAMS = \
                     [[10, 13], [16, 30], [33, 23]]],
         "classes": 80,
     },
-    "batch_size": 16,
+    "batch_size": 1,
     "confidence_threshold": 0.5,
     "images_path": "./images/",
     "classes_names_path": "../data/coco.names",

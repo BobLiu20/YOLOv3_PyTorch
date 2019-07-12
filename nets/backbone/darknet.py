@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import math
+import numpy as np
 from collections import OrderedDict
 
 __all__ = ['darknet21', 'darknet53']

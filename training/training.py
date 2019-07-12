@@ -49,23 +49,6 @@ def train(config):
         state_dict = torch.load(config["pretrain_snapshot"])
         net.load_state_dict(state_dict)
 
-    # Only export onnx
-    # if config.get("export_onnx"):
-        # real_model = net.module
-        # real_model.eval()
-        # dummy_input = torch.randn(8, 3, config["img_h"], config["img_w"]).cuda()
-        # save_path = os.path.join(config["sub_working_dir"], "pytorch.onnx")
-        # logging.info("Exporting onnx to {}".format(save_path))
-        # torch.onnx.export(real_model, dummy_input, save_path, verbose=False)
-        # logging.info("Done. Exiting now.")
-        # sys.exit()
-
-    # Evaluate interface
-    # if config["evaluate_type"]:
-        # logging.info("Using {} to evaluate model.".format(config["evaluate_type"]))
-        # evaluate_func = importlib.import_module(config["evaluate_type"]).run_eval
-        # config["online_net"] = net
-
     # YOLO loss with 3 scales
     yolo_losses = []
     for i in range(3):

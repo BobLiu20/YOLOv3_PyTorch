@@ -54,30 +54,12 @@ def plot_one_box(x, img, color, label=None, line_thickness=None):  # Plots one b
         cv2.putText(img, label, (c1[0], c1[1]+40), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 def test(config):
-    is_training = False
-    # Load and initialize network
-    net = ModelMain(config, is_training=is_training)
-    net.train(is_training)
-    net.load_darknet_weights('../weights/yolov3.weights')
-    # torch.save(net.state_dict, '../weights/cvt.pt')
-
-    # Set data parallel
-    # net = nn.DataParallel(net)
-    net = net.cuda()
-
-    # Restore pretrain model
-    # if config["pretrain_snapshot"]:
-    #     logging.info("load checkpoint from {}".format(config["pretrain_snapshot"]))
-    #     state_dict = torch.load(config["pretrain_snapshot"])
-    #     net.load_state_dict(state_dict)
-    # else:
-    #     raise Exception("missing pretrain_snapshot!!!")
-
+    trace_model = torch.jit.load('../weights/cplus_model.pt')
     # YOLO loss with 3 scales
-    yolo_losses = []
-    for i in range(3):
-        yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
-                                    config["yolo"]["classes"], (config["img_w"], config["img_h"])))
+    # yolo_losses = []
+    # for i in range(3):
+    #     yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
+    #                                 config["yolo"]["classes"], (config["img_w"], config["img_h"])))
 
     # prepare images path
     images_name = os.listdir(config["images_path"])
@@ -108,17 +90,13 @@ def test(config):
             # img -= self.rgb_mean
             # img /= self.rgb_std
             img /= 255.0
+            # img = np.ones([3, 416, 416], np.float32)*0.3
             images.append(img)
         images = np.asarray(images)
         images = torch.from_numpy(images).cuda()
         # inference
         with torch.no_grad():
-            outputs = net(images)
-            # trace_model = torch.jit.trace(net,images)
-            # pred_out = trace_model(images)
-            # pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
-            # trace_torch_model = False
-            # trace_model.save('../weights/cplus_model.pt')
+            outputs = trace_model(images)
             # output_list = []
             # for i in range(3):
             #     output_list.append(yolo_losses[i](outputs[i]))
@@ -167,7 +145,7 @@ def test(config):
                         is_save = True
                 if is_save:
                     cv2.imwrite(results_img_path.replace('.bmp', '.jpg').replace('.tif', '.jpg'), img)
-    logging.info("Save all results to ./output/")    
+    logging.info("Save all results to ./output/")
 
 def main():
     logging.basicConfig(level=logging.DEBUG,

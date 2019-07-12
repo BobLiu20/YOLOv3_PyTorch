@@ -3,9 +3,9 @@ import torch.nn as nn
 from collections import OrderedDict
 
 from .backbone import backbone_fn
+from .yolo_loss import YOLOLoss
 
-
-class ModelMain(nn.Module):
+class ModelMain(torch.jit.ScriptModule):
     def __init__(self, config, is_training=True):
         super(ModelMain, self).__init__()
         self.config = config
@@ -18,6 +18,15 @@ class ModelMain(nn.Module):
         #  embedding0
         final_out_filter0 = len(config["yolo"]["anchors"][0]) * (5 + config["yolo"]["classes"])
         self.embedding0 = self._make_embedding([512, 1024], _out_filters[-1], final_out_filter0)
+
+        # ###################spp
+        # self.maxpool1 = nn.MaxPool2d((5, 5), 1, 2)
+        # self.maxpool2 = nn.MaxPool2d((9, 9), 1, 4)
+        # self.maxpool3 = nn.MaxPool2d((13, 13), 1, 6)
+        # self.embedding_spp_1 = self._make_embedding_spp_1([512,1024], _out_filters[-1])
+        # self.embedding_spp_2 = self._make_embedding_spp_2([512,1024],2048,final_out_filter0)
+        # ####################spp
+
         #  embedding1
         final_out_filter1 = len(config["yolo"]["anchors"][1]) * (5 + config["yolo"]["classes"])
         self.embedding1_cbl = self._make_cbl(512, 256, 1)
@@ -28,6 +37,12 @@ class ModelMain(nn.Module):
         self.embedding2_cbl = self._make_cbl(256, 128, 1)
         self.embedding2_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.embedding2 = self._make_embedding([128, 256], _out_filters[-3] + 128, final_out_filter2)
+
+        # YOLO loss with 3 scales
+        self.yolo_losses = []
+        for i in range(3):
+            self.yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
+                                        config["yolo"]["classes"], (config["img_w"], config["img_h"])))
 
     def _make_cbl(self, _in, _out, ks):
         ''' cbl = conv + batch_norm + leaky_relu
@@ -51,6 +66,23 @@ class ModelMain(nn.Module):
                                            stride=1, padding=0, bias=True))
         return m
 
+    def _make_embedding_spp_1(self, filters_list, in_filters):
+        m = nn.ModuleList([
+            self._make_cbl(in_filters, filters_list[0], 1),
+            self._make_cbl(filters_list[0], filters_list[1], 3),
+            self._make_cbl(filters_list[1], filters_list[0], 1)])
+        return m
+
+    def _make_embedding_spp_2(self, filters_list,in_filters, out_filter):
+        m = nn.ModuleList([
+            self._make_cbl(in_filters, filters_list[0], 1),
+            self._make_cbl(filters_list[0], filters_list[1], 3),
+            self._make_cbl(filters_list[1], filters_list[0], 1),
+            self._make_cbl(filters_list[0], filters_list[1], 3)])
+        m.add_module("conv_out", nn.Conv2d(filters_list[1], out_filter, kernel_size=1,
+                                               stride=1, padding=0, bias=True))
+        return m
+
     def forward(self, x):
         def _branch(_embedding, _in):
             for i, e in enumerate(_embedding):
@@ -58,10 +90,24 @@ class ModelMain(nn.Module):
                 if i == 4:
                     out_branch = _in
             return _in, out_branch
+        def _branch_spp(_embedding, _in):
+            for i, e in enumerate(_embedding):
+                _in = e(_in)
+                if i == 2:
+                    out_branch = _in
+            return _in, out_branch
+
         #  backbone
         x2, x1, x0 = self.backbone(x)
         #  yolo branch 0
         out0, out0_branch = _branch(self.embedding0, x0)
+
+        # #spp start
+        # spp_in,_ = _branch_spp(self.embedding_spp_1,x0)
+        # spp_out = torch.cat([spp_in,self.maxpool1(spp_in),self.maxpool2(spp_in),self.maxpool3(spp_in)],1)
+        # out0, out0_branch = _branch_spp(self.embedding_spp_2, spp_out)
+        # #spp end
+
         #  yolo branch 1
         x1_in = self.embedding1_cbl(out0_branch)
         x1_in = self.embedding1_upsample(x1_in)
@@ -72,7 +118,13 @@ class ModelMain(nn.Module):
         x2_in = self.embedding2_upsample(x2_in)
         x2_in = torch.cat([x2_in, x2], 1)
         out2, out2_branch = _branch(self.embedding2, x2_in)
-        return out0, out1, out2
+
+        output_list = []
+        output_list.append(self.yolo_losses[0](out0,1,13,13))
+        output_list.append(self.yolo_losses[1](out1,1,26,26))
+        output_list.append(self.yolo_losses[2](out2,1,52,52))
+        output = torch.cat(output_list, 1)
+        return output
 
     def load_darknet_weights(self, weights_path):
         import numpy as np
@@ -128,6 +180,8 @@ class ModelMain(nn.Module):
                     print ("conv wight: ", ptr, num_b, k)
                     ptr += num_b
                     last_conv = None
+                elif 'num_batches_tracked' in k:
+                    continue
                 else:
                     raise Exception("Error for bn")
             elif 'conv' in k:
@@ -155,6 +209,8 @@ if __name__ == "__main__":
     config = {"model_params": {"backbone_name": "darknet_53"}}
     m = ModelMain(config)
     x = torch.randn(1, 3, 416, 416)
+    m.load_darknet_weights('../weights/smoke.weights')
+    torch.save(m.state_dict, '../weights/cvt.weights')
     y0, y1, y2 = m(x)
     print(y0.size())
     print(y1.size())
