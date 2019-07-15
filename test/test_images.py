@@ -58,7 +58,7 @@ def test(config):
     # Load and initialize network
     net = ModelMain(config, is_training=is_training)
     net.train(is_training)
-    net.load_darknet_weights('../weights/yolov3.weights')
+    net.load_darknet_weights('../weights/smoke.weights')
     # torch.save(net.state_dict, '../weights/cvt.pt')
 
     # Set data parallel
@@ -114,11 +114,11 @@ def test(config):
         # inference
         with torch.no_grad():
             outputs = net(images)
-            # trace_model = torch.jit.trace(net,images)
-            # pred_out = trace_model(images)
-            # pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
-            # trace_torch_model = False
-            # trace_model.save('../weights/cplus_model.pt')
+            trace_model = torch.jit.trace(net,images)
+            pred_out = trace_model(images)
+            pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
+            trace_torch_model = False
+            trace_model.save('../weights/cplus_model.pt')
             # output_list = []
             # for i in range(3):
             #     output_list.append(yolo_losses[i](outputs[i]))
