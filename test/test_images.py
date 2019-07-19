@@ -51,14 +51,14 @@ def plot_one_box(x, img, color, label=None, line_thickness=None):  # Plots one b
         t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1)  # filled
-        cv2.putText(img, label, (c1[0], c1[1]+40), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        cv2.putText(img, label, (c1[0], c1[1]), 0, tl / 5, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 def test(config):
     is_training = False
     # Load and initialize network
     net = ModelMain(config, is_training=is_training)
     net.train(is_training)
-    net.load_darknet_weights('../weights/smoke.weights')
+    net.load_darknet_weights('../weights/yolov3_head_last.weights')
     # torch.save(net.state_dict, '../weights/cvt.pt')
 
     # Set data parallel
@@ -100,7 +100,7 @@ def test(config):
                 continue
 
             # Padded resize
-            img, _, _, _ = resize_square(image, height=416, color=(127.5, 127.5, 127.5))
+            img, _, _, _ = resize_square(image, height=608, color=(127.5, 127.5, 127.5))
 
             # Normalize RGB
             img = img[:, :, ::-1].transpose(2, 0, 1)
@@ -114,11 +114,11 @@ def test(config):
         # inference
         with torch.no_grad():
             outputs = net(images)
-            trace_model = torch.jit.trace(net,images)
-            pred_out = trace_model(images)
-            pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
-            trace_torch_model = False
-            trace_model.save('../weights/cplus_model.pt')
+            # trace_model = torch.jit.trace(net,images)
+            # pred_out = trace_model(images)
+            # pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
+            # trace_torch_model = False
+            # trace_model.save('../weights/cplus_model.pt')
             # output_list = []
             # for i in range(3):
             #     output_list.append(yolo_losses[i](outputs[i]))

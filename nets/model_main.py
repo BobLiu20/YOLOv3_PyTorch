@@ -120,9 +120,9 @@ class ModelMain(torch.jit.ScriptModule):
         out2, out2_branch = _branch(self.embedding2, x2_in)
 
         output_list = []
-        output_list.append(self.yolo_losses[0](out0,1,13,13))
-        output_list.append(self.yolo_losses[1](out1,1,26,26))
-        output_list.append(self.yolo_losses[2](out2,1,52,52))
+        output_list.append(self.yolo_losses[0](out0,1,19,19))
+        output_list.append(self.yolo_losses[1](out1,1,38,38))
+        output_list.append(self.yolo_losses[2](out2,1,76,76))
         output = torch.cat(output_list, 1)
         return output
 
