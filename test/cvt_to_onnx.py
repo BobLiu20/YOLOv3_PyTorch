@@ -18,7 +18,7 @@ import matplotlib.patches as patches
 from matplotlib.ticker import NullLocator
 
 import torch
-import torch.nn as nn
+import torch.onnx
 
 
 MY_DIRNAME = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +59,7 @@ def test(config):
     net = ModelMain(config, is_training=is_training)
     net.train(is_training)
     net.load_darknet_weights('../weights/pt_to_darknet.weight')
-    torch.save(net.state_dict, '../weights/darknet_to_pt.pt')
+    # torch.save(net.state_dict, '../weights/darknet_to_pt.pt')
 
     # Set data parallel
     # net = nn.DataParallel(net)
@@ -167,7 +167,7 @@ def test(config):
                         is_save = True
                 if is_save:
                     cv2.imwrite(results_img_path.replace('.bmp', '.jpg').replace('.tif', '.jpg'), img)
-    logging.info("Save all results to ./output/")    
+    logging.info("Save all results to ./output/")
 
 def main():
     logging.basicConfig(level=logging.DEBUG,
