@@ -41,10 +41,10 @@ class YOLOLoss(nn.Module):
         # Get outputs
         x = torch.sigmoid(prediction[..., 0])          # Center x
         y = torch.sigmoid(prediction[..., 1])          # Center y
-        w = prediction[..., 2]                         # Width
+        w = torch.sigmoid(prediction[..., 2])                        # Width
         h = prediction[..., 3]                         # Height
         conf = torch.sigmoid(prediction[..., 4])       # Conf
-        pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred.
+        pred_cls = prediction[..., 5:]  # Cls pred.
 
         if targets is not None:
             #  build target
@@ -83,15 +83,15 @@ class YOLOLoss(nn.Module):
             anchor_w = anchor_w.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(w.shape)
             anchor_h = anchor_h.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(h.shape)
             # Add offset and scale with anchors
+            _scale = FloatTensor([stride_w,stride_h]*2)
             pred_boxes = FloatTensor(torch.Size([bs,  self.num_anchors, in_h, in_w,4]))
-            pred_boxes[..., 0] = x + grid_x
-            pred_boxes[..., 1] = y + grid_y
-            pred_boxes[..., 2] = torch.exp(w) * anchor_w
-            pred_boxes[..., 3] = torch.exp(h) * anchor_h
+            pred_boxes[..., 0] = (x + grid_x)*stride_w
+            pred_boxes[..., 1] = (y + grid_y)*stride_w
+            pred_boxes[..., 2] = w*np.pi
+            pred_boxes[..., 3] = (torch.exp(h) * anchor_h)*stride_w
             # Results
             # _scale = torch.Tensor([stride_w, stride_h] * 2).type(FloatTensor)
-            _scale = FloatTensor([stride_w,stride_h]*2)
-            output = torch.cat((pred_boxes.view(bs, -1, 4) * _scale,
+            output = torch.cat((pred_boxes.view(bs, -1, 4),
                                 conf.view(bs, -1, 1), pred_cls.view(bs, -1, self.num_classes)), -1)
             return output
 
