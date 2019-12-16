@@ -29,8 +29,8 @@ bash get_coco_dataset.sh
 ## Training
 ##### Download pretrained weights
 1. See [weights readme](weights/README.md) for detail.   
-2. Download pretrained backbone wegiths from [Google Drive](https://drive.google.com/open?id=1VYwHUznM3jLD7ftmOSCHnpkVpBJcFIOA) or [Baidu Drive](https://pan.baidu.com/s/1axXjz6ct9Rn9GtDTust6DA)   
-3. Move downloaded file ```darknet53_weights_pytorch.pth``` to ```wegihts``` folder in this project.   
+2. Download pretrained backbone weights from [Google Drive](https://drive.google.com/open?id=1VYwHUznM3jLD7ftmOSCHnpkVpBJcFIOA) or [Baidu Drive](https://pan.baidu.com/s/1axXjz6ct9Rn9GtDTust6DA)   
+3. Move downloaded file ```darknet53_weights_pytorch.pth``` to ```weights``` folder in this project.   
 ##### Modify training parameters
 1. Review config file ```training/params.py```   
 2. Replace ```YOUR_WORKING_DIR``` to your working directory. Use for save model and tmp file.
@@ -52,8 +52,8 @@ python -m tensorboard.main --logdir=YOUR_WORKING_DIR
 ## Evaluate
 ##### Download pretrained weights
 1. See [weights readme](weights/README.md) for detail.   
-2. Download pretrained yolo3 full wegiths from [Google Drive](https://drive.google.com/file/d/1SnFAlSvsx37J7MDNs3WWLgeKY0iknikP/view?usp=sharing) or [Baidu Drive](https://pan.baidu.com/s/1YCcRLPWPNhsQfn5f8bs_0g)   
-3. Move downloaded file ```official_yolov3_weights_pytorch.pth``` to ```wegihts``` folder in this project.   
+2. Download pretrained yolo3 full weights from [Google Drive](https://drive.google.com/file/d/1SnFAlSvsx37J7MDNs3WWLgeKY0iknikP/view?usp=sharing) or [Baidu Drive](https://pan.baidu.com/s/1YCcRLPWPNhsQfn5f8bs_0g)   
+3. Move downloaded file ```official_yolov3_weights_pytorch.pth``` to ```weights``` folder in this project.   
 ##### Start evaluate
 ```
 cd evaluate
