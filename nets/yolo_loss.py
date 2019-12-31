@@ -84,11 +84,12 @@ class YOLOLoss(nn.Module):
             anchor_h = anchor_h.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(h.shape)
             # Add offset and scale with anchors
             _scale = FloatTensor([stride_w,stride_h]*2)
-            pred_boxes = FloatTensor(torch.Size([bs,  self.num_anchors, in_h, in_w,4]))
-            pred_boxes[..., 0] = (x + grid_x)*stride_w
-            pred_boxes[..., 1] = (y + grid_y)*stride_w
-            pred_boxes[..., 2] = w*np.pi
-            pred_boxes[..., 3] = (torch.exp(h) * anchor_h)*stride_w
+            pred_boxes = torch.cat(( ((x + grid_x)*stride_w).unsqueeze(4) , ((y + grid_y)*stride_w).unsqueeze(4), (w*np.pi).unsqueeze(4), ((torch.exp(h) * anchor_h)*stride_w).unsqueeze(4)),dim=4)
+            # pred_boxes = FloatTensor(torch.Size([bs,  self.num_anchors, in_h, in_w,4]))
+            # pred_boxes[..., 0] = (x + grid_x)*stride_w
+            # pred_boxes[..., 1] = (y + grid_y)*stride_w
+            # pred_boxes[..., 2] = w*np.pi
+            # pred_boxes[..., 3] = (torch.exp(h) * anchor_h)*stride_w
             # Results
             # _scale = torch.Tensor([stride_w, stride_h] * 2).type(FloatTensor)
             output = torch.cat((pred_boxes.view(bs, -1, 4),

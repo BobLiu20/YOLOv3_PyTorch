@@ -10,7 +10,7 @@ import logging
 import shutil
 import cv2
 import random
-
+import onnx
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -59,8 +59,13 @@ def test(config):
     net = ModelMain(config, is_training=is_training)
     net.train(is_training)
     net.load_darknet_weights('../weights/pt_to_darknet.weight')
-    torch.save(net.state_dict, '../weights/darknet_to_pt.pt')
+    torch.save(net.state_dict(), '../weights/darknet_to_pt.pt')
 
+    # checkpoint = torch.load('../weights/darknet_to_pt.pt', map_location='cpu')
+    # net.load_state_dict(checkpoint)
+
+    torch.onnx.export(net, torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0), '../weights/line_detector.onnx',
+                      verbose=True,opset_version=9)
     # Set data parallel
     # net = nn.DataParallel(net)
     net = net.cuda()
@@ -113,61 +118,18 @@ def test(config):
         images = torch.from_numpy(images).cuda()
         # inference
         with torch.no_grad():
-            outputs = net(images)
-            trace_model = torch.jit.trace(net,images)
-            pred_out = trace_model(images)
-            pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
-            # trace_torch_model = False
-            trace_model.save('../weights/EVTraffic_LineDetector_v1.0.0.pt')
+            pred = net(images)
+            # trace_model = torch.jit.trace(net,images)
+            # pred_out = trace_model(images)
+            # pred_out1 = trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda())
+            # # trace_torch_model = False
+            # trace_model.save('../weights/EVTraffic_LineDetector_v1.0.0.pt')
             # output_list = []
             # for i in range(3):
             #     output_list.append(yolo_losses[i](outputs[i]))
             # output = torch.cat(output_list, 1)
-            batch_detections = non_max_suppression(outputs, config["yolo"]["classes"],
-                                                   conf_thres=config["confidence_threshold"],
-                                                   nms_thres=0.45)
-
-        # write result images. Draw bounding boxes and labels of detections
-        classes = open(config["classes_names_path"], "r").read().split("\n")[:-1]
-        if not os.path.isdir("./output/"):
-            os.makedirs("./output/")
-        results_img_path = os.path.join("./output/", os.path.basename(images_path[step]))
-        img = images_origin[0]
-        for idx, boxes in enumerate(batch_detections):
-            # The amount of padding that was added
-            pad_x = max(img.shape[0] - img.shape[1], 0) * (config["img_w"] / max(img.shape))
-            pad_y = max(img.shape[1] - img.shape[0], 0) * (config["img_h"] / max(img.shape))
-            # Image height and width after padding is removed
-            unpad_h = config["img_h"] - pad_y
-            unpad_w = config["img_w"] - pad_x
-
-            # Draw bounding boxes and labels of detections
-            if boxes is not None:
-                color_list = [[0, 0, 255], [0, 255, 255]]
-                unique_classes = boxes[:, -1]
-                bbox_colors = color_list
-
-                is_save = False
-                for i, box in enumerate(boxes):
-                    # Rescale coordinates to original dimensions
-                    x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
-                    box_h = ((y2 - y1) / unpad_h) * img.shape[0]
-                    box_w = ((x2 - x1) / unpad_w) * img.shape[1]
-                    y1 = (((y1 - pad_y // 2) / unpad_h) * img.shape[0]).round().item()
-                    x1 = (((x1 - pad_x // 2) / unpad_w) * img.shape[1]).round().item()
-                    x2 = (x1 + box_w).round().item()
-                    y2 = (y1 + box_h).round().item()
-                    x1, y1, x2, y2 = max(x1, 0), max(y1, 0), max(x2, 0), max(y2, 0)
-
-                    # Add the bbox to the plot
-                    label = '%s %.2f' % (classes[int(box[-1])], box[-2])
-                    color = bbox_colors[int(box[-1])]
-                    if int(box[-1]) == 0 or True:
-                        plot_one_box([x1, y1, x2, y2], img, label=label, color=color)
-                        is_save = True
-                if is_save:
-                    cv2.imwrite(results_img_path.replace('.bmp', '.jpg').replace('.tif', '.jpg'), img)
-    logging.info("Save all results to ./output/")    
+            pred = pred[pred[:, :, 4] > 0.2]
+            print(pred)
 
 def main():
     logging.basicConfig(level=logging.DEBUG,

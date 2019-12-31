@@ -12,7 +12,7 @@ TRAINING_PARAMS = \
     },
     "batch_size": 1,
     "confidence_threshold": 0.2,
-    "images_path": "./images/",
+    "images_path": "/media/hzh/work/workspace/yolov3-line_detect/test1",
     "classes_names_path": "../data/coco.names",
     "img_h": 416,
     "img_w": 416,

@@ -54,13 +54,14 @@ def plot_one_box(x, img, color, label=None, line_thickness=None):  # Plots one b
         cv2.putText(img, label, (c1[0], c1[1]+40), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 def test(config):
-    trace_model = torch.jit.load('../weights/cplus_model.pt')
+    trace_model = torch.jit.load('../weights/EVTraffic_LineDetector_v1.0.0.pt')
     # YOLO loss with 3 scales
     # yolo_losses = []
     # for i in range(3):
     #     yolo_losses.append(YOLOLoss(config["yolo"]["anchors"][i],
     #                                 config["yolo"]["classes"], (config["img_w"], config["img_h"])))
-
+    torch.onnx.export(trace_model, torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda(), '../weights/line_detector.onnx',
+                      verbose=True,opset_version=11,example_outputs=trace_model(torch.from_numpy(np.ones([3,416,416],np.float32)).unsqueeze(0).cuda()))
     # prepare images path
     images_name = os.listdir(config["images_path"])
     images_path = [os.path.join(config["images_path"], name) for name in images_name]

@@ -5,7 +5,7 @@ from collections import OrderedDict
 from .backbone import backbone_fn
 from .yolo_loss import YOLOLoss
 
-class ModelMain(torch.jit.ScriptModule):
+class ModelMain(nn.Module):
 # class ModelMain(nn.Module):
     def __init__(self, config, is_training=True):
         super(ModelMain, self).__init__()
